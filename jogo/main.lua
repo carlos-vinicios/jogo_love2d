@@ -2,7 +2,7 @@ local anim = require 'anim8'
 local larguraTela = love.graphics.getWidth()
 local alturaTela = love.graphics.getHeight()
 local initPosY = 507
-local imgMovimento, imgParado, imgPulo, imgGolpe, animParado, animMovimento, animPulo, animGolpe
+local imgMovimento, imgParado, imgGolpe, animParado, animMovimento, animGolpe
 
 local posX = 100 -- posição inicial do personagem no eixo X
 local posY = initPosY -- posição inicial do personagem no eixo Y
@@ -51,13 +51,10 @@ end
 function loadMovimento()
   imgMovimento = love.graphics.newImage("imagens/movimento.png")
   imgParado = love.graphics.newImage("imagens/parado.png")
-  imgPulo = love.graphics.newImage("imagens/pulo.png")
   local parado = anim.newGrid( 41, 72, imgParado:getWidth(), imgParado:getHeight() )
   animParado = anim.newAnimation( parado( '1-4', 1), 0.02 )
   local movi = anim.newGrid( 58, 63, imgMovimento:getWidth(), imgMovimento:getHeight() )
   animMovimento = anim.newAnimation( movi( '1-8', 1), 0.09 )
-  local pul = anim.newGrid( 52, 83, imgPulo:getWidth(), imgPulo:getHeight() )
-  animPulo = anim.newAnimation( pul( '1-8', 1), 0.20 )
 end
 
 function movimentar( dt )
@@ -91,13 +88,10 @@ function renderizarMovimento()
   elseif ( not direcao and parado ) then
     animParado:draw( imgParado, posX, posY, 0, -1, 1, 20, 0 )
   end
-  if ( pulando and direcao and (not parado) and (not movimento) ) then
-    animPulo:draw( imgPulo, posX, posY, 0, 1, 1, 26, 0)
-  end
 end
 
 function parou( key )
-  if ( key == 'left' or key == 'right' or key == 'q' ) then
+  if ( key == 'left' or key == 'right' or key == 'q' or key == 'up' ) then
     parado = true
   end
 end
@@ -140,6 +134,7 @@ function golpear( dt )
   if love.keyboard.isDown('q') then
     movimentando = false
     parado = false
+    pulando = false
     if direcao then --soco right
       posX = posX + 20 * dt
     else --soco left
