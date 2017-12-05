@@ -117,7 +117,6 @@ function pular(key) --realiza a ação do pulo com keypressed
     end
   end
 end
-<<<<<<< Updated upstream
 
 function renderizarMovimento()
   love.graphics.setColor(255, 255, 255) --define a cor devido a imagem ser transparente e o fundo vai interferir na cor do personagem
@@ -137,8 +136,6 @@ function renderizarMovimento()
     love.graphics.draw( imgPulo, posX, posY, 0, -1, 1, 27, 0 )
   end
 end
-=======
->>>>>>> Stashed changes
 --fim do controle de movimento
 
 --controle de golpes
