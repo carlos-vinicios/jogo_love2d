@@ -11,7 +11,7 @@ local parado = true
 local movimentando = false
 local pulando = false
 local golpeando = false
-local gravidade = 400
+local gravidade = 600
 local alturaPulo = 300
 local velY = 0
 
@@ -45,6 +45,7 @@ end
 function renderizarChao()
   love.graphics.setColor(168, 168, 168)
   love.graphics.rectangle( "fill", 0, initPosY + 63, larguraTela, 80)
+  love.graphics.rectangle( "fill", 0, initPosY - 30, 200, 30)
 end
 --fim do controle do mundo
 
