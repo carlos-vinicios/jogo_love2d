@@ -1,26 +1,27 @@
 local anim = require 'anim8'
 local larguraTela = love.graphics.getWidth()
-local alturaTela = love.graphics.getHeight()
+--local alturaTela = love.graphics.getHeight()
 local initPosY = 507
-local imgMovimento, imgParado, imgGolpe, animParado, animMovimento, animGolpe
+local imgMovimento, imgParado, imgPulo, imgGolpe, animParado, animMovimento, animGolpe
 
 local posX = 100 -- posição inicial do personagem no eixo X
 local posY = initPosY -- posição inicial do personagem no eixo Y
 local direcao = true --define a direcao true = right / false = left
 local parado = true
-local movimentando = true
-local pulando = true
+local movimentando = false
+local pulando = false
+local golpeando = false
 local gravidade = 400
 local alturaPulo = 300
 local velY = 0
 
 function love.load()
-  loadMovimento()
+  loadMovimentacao()
   loadGolpe()
 end
 
 function love.update( dt )
-  movimentar( dt )
+  movimentacao(dt)
   pulo(dt)
   golpear( dt )
 end
@@ -48,51 +49,47 @@ end
 --fim do controle do mundo
 
 --Controle de movimento
-function loadMovimento()
+function loadMovimentacao()
   imgMovimento = love.graphics.newImage("imagens/movimento.png")
   imgParado = love.graphics.newImage("imagens/parado.png")
+  imgPulo = love.graphics.newImage("imagens/pulo.png")
   local parado = anim.newGrid( 41, 72, imgParado:getWidth(), imgParado:getHeight() )
-  animParado = anim.newAnimation( parado( '1-4', 1), 0.02 )
+  animParado = anim.newAnimation( parado( '1-4', 1), 0.20 )
   local movi = anim.newGrid( 58, 63, imgMovimento:getWidth(), imgMovimento:getHeight() )
   animMovimento = anim.newAnimation( movi( '1-8', 1), 0.09 )
 end
 
-function movimentar( dt )
-  if love.keyboard.isDown('left') then --quando o botão da esquerda no teclado, for apertado
+function movimentacaoAr()
+  if posY ~= initPosY then
+    movimentando = false
+    pulando = true
+  else
     movimentando = true
+  end
+end
+
+function movimentacao( dt )
+  if love.keyboard.isDown('left') then --quando o botão da esquerda no teclado, for apertado
+    movimentacaoAr()
     parado = false
-    pulando = false
     posX = posX - 150 * dt
     direcao = false
     animMovimento:update(dt)
   end
   if love.keyboard.isDown('right') then --quando o botão da direita no teclado, for apertado
-    movimentando = true
+    movimentacaoAr()
     parado = false
-    pulando = false
     posX = posX + 150 * dt
     direcao = true
     animMovimento:update(dt)
   end
-end
-
-function renderizarMovimento()
-  love.graphics.setColor(255, 255, 255) --define a cor devido a imagem ser transparente e o fundo vai interferir na cor do personagem
-  if ( movimentando and direcao and ( not parado ) ) then
-    animMovimento:draw( imgMovimento, posX, posY + 8, 0, 1, 1, 29, 0 )
-  elseif ( movimentando and (not direcao) and (not parado) ) then
-    animMovimento:draw( imgMovimento, posX, posY + 8, 0, -1, 1, 29, 0 )
-  end
-  if ( direcao and parado ) then
-    animParado:draw( imgParado, posX, posY, 0, 1, 1, 20, 0 )
-  elseif ( not direcao and parado ) then
-    animParado:draw( imgParado, posX, posY, 0, -1, 1, 20, 0 )
-  end
+  animParado:update(dt)
 end
 
 function parou( key )
   if ( key == 'left' or key == 'right' or key == 'q' or key == 'up' ) then
     parado = true
+    golpeando = false
   end
 end
 
@@ -105,21 +102,38 @@ function pulo(dt) -- realiza os calculos para o pulo do personagem
       posY = initPosY
     end
   end
+  if posY == initPosY then
+    pulando = false
+  end
 end
 
-function pular(key) -- realiza a ação do pulo
+function pular(key) --realiza a ação do pulo com keypressed
   pulando = true
-  parado = false
-  movimento = false
+  movimentando = false
   if key == 'up' then
-    if velY == 0 then
+    if velY == 0 and (not golpeando) then
       velY = alturaPulo
     end
   end
 end
 
-function renderizarPulo()
-
+function renderizarMovimento()
+  love.graphics.setColor(255, 255, 255) --define a cor devido a imagem ser transparente e o fundo vai interferir na cor do personagem
+  if ( movimentando and direcao and ( not parado ) ) then
+    animMovimento:draw( imgMovimento, posX, posY + 8, 0, 1, 1, 29, 0 )
+  elseif ( movimentando and (not direcao) and (not parado) ) then
+    animMovimento:draw( imgMovimento, posX, posY + 8, 0, -1, 1, 29, 0 )
+  end
+  if ( direcao and parado and (not pulando) ) then
+    animParado:draw( imgParado, posX, posY, 0, 1, 1, 20, 0 )
+  elseif ( not direcao and parado and not pulando ) then
+    animParado:draw( imgParado, posX, posY, 0, -1, 1, 20, 0 )
+  end
+  if( pulando and direcao and (not movimentando) ) then
+    love.graphics.draw( imgPulo, posX, posY, 0, 1, 1, 27, 0 )
+  elseif ( pulando and (not direcao) and (not movimentando) ) then
+    love.graphics.draw( imgPulo, posX, posY, 0, -1, 1, 27, 0 )
+  end
 end
 --fim do controle de movimento
 
@@ -132,6 +146,7 @@ end
 
 function golpear( dt )
   if love.keyboard.isDown('q') then
+    golpeando = true
     movimentando = false
     parado = false
     pulando = false
@@ -146,9 +161,9 @@ end
 
 function renderizarGolpes()
   love.graphics.setColor(255, 255, 255)
-  if ( direcao and ( not parado ) and (not movimentando) ) then
+  if ( direcao and ( not parado ) and (not movimentando) and (not pulando) ) then
     animGolpe:draw( imgGolpe, posX, posY + 10, 0, 1, 1, 31, 0 )
-  elseif ( (not direcao) and ( not parado) and (not movimentando) ) then
+  elseif ( (not direcao) and ( not parado) and (not movimentando) and (not pulando) ) then
     animGolpe:draw( imgGolpe, posX, posY + 10, 0, -1, 1, 31, 0 )
   end
 end
