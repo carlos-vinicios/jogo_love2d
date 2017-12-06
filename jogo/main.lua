@@ -1,7 +1,15 @@
 local anim = require 'anim8'
 local larguraTela = love.graphics.getWidth()
 --local alturaTela = love.graphics.getHeight()
-local initPosY = 507
+local initPosY = 570
+local chao = {
+  x= larguraTela,
+  y= 570
+}
+local plat1 = {
+  x= 200,
+  y= 480
+}
 local imgMovimento, imgParado, imgPulo, imgGolpe, animParado, animMovimento, animGolpe
 
 local posX = 100 -- posição inicial do personagem no eixo X
@@ -12,7 +20,7 @@ local movimentando = false
 local pulando = false
 local golpeando = false
 local gravidade = 600
-local alturaPulo = 300
+local alturaPulo = 350
 local velY = 0
 
 function love.load()
@@ -44,12 +52,19 @@ end
 --Controle do mundo
 function renderizarChao()
   love.graphics.setColor(168, 168, 168)
-  love.graphics.rectangle( "fill", 0, initPosY + 63, larguraTela, 80)
-  love.graphics.rectangle( "fill", 0, initPosY - 30, 200, 30)
+  love.graphics.rectangle( "fill", 0, chao.y, chao.x, 80) --chão 63 a diferença do desenho da imagem, assim como, qualquer 63 abaixo
+  love.graphics.rectangle( "fill", 0, plat1.y, plat1.x, 30) --plataforma 1
 end
 --fim do controle do mundo
 
 --Controle de movimento
+function emPlataforma(dt)
+  if posY == plat1.y and posX <= plat1.x then
+
+  end
+end
+
+
 function loadMovimentacao()
   imgMovimento = love.graphics.newImage("imagens/movimento.png")
   imgParado = love.graphics.newImage("imagens/parado.png")
@@ -98,12 +113,16 @@ function pulo(dt) -- realiza os calculos para o pulo do personagem
   if velY ~= 0 then
     posY = posY - velY * dt
     velY = velY - gravidade * dt
-    if posY > initPosY then
+    if posY > initPosY then --para parar no chão
       velY = 0
       posY = initPosY
     end
+    if posY > plat1.y and posX < plat1.x then --para parar na plataforma 1
+      velY = 0
+      posY = plat1.y
+    end
   end
-  if posY == initPosY then
+  if posY == initPosY or posY == plat1.y then
     pulando = false
   end
 end
@@ -121,19 +140,19 @@ end
 function renderizarMovimento()
   love.graphics.setColor(255, 255, 255) --define a cor devido a imagem ser transparente e o fundo vai interferir na cor do personagem
   if ( movimentando and direcao and ( not parado ) ) then
-    animMovimento:draw( imgMovimento, posX, posY + 8, 0, 1, 1, 29, 0 )
+    animMovimento:draw( imgMovimento, posX, posY + 8, 0, 1, 1, 29, 63 )
   elseif ( movimentando and (not direcao) and (not parado) ) then
-    animMovimento:draw( imgMovimento, posX, posY + 8, 0, -1, 1, 29, 0 )
+    animMovimento:draw( imgMovimento, posX, posY + 8, 0, -1, 1, 29, 63 )
   end
   if ( direcao and parado and (not pulando) ) then
-    animParado:draw( imgParado, posX, posY, 0, 1, 1, 20, 0 )
+    animParado:draw( imgParado, posX, posY, 0, 1, 1, 20, 63 )
   elseif ( not direcao and parado and not pulando ) then
-    animParado:draw( imgParado, posX, posY, 0, -1, 1, 20, 0 )
+    animParado:draw( imgParado, posX, posY, 0, -1, 1, 20, 63 )
   end
   if( pulando and direcao and (not movimentando) ) then
-    love.graphics.draw( imgPulo, posX, posY, 0, 1, 1, 27, 0 )
+    love.graphics.draw( imgPulo, posX, posY, 0, 1, 1, 27, 63 )
   elseif ( pulando and (not direcao) and (not movimentando) ) then
-    love.graphics.draw( imgPulo, posX, posY, 0, -1, 1, 27, 0 )
+    love.graphics.draw( imgPulo, posX, posY, 0, -1, 1, 27, 63 )
   end
 end
 --fim do controle de movimento
@@ -163,9 +182,9 @@ end
 function renderizarGolpes()
   love.graphics.setColor(255, 255, 255)
   if ( direcao and ( not parado ) and (not movimentando) and (not pulando) ) then
-    animGolpe:draw( imgGolpe, posX, posY + 10, 0, 1, 1, 31, 0 )
+    animGolpe:draw( imgGolpe, posX, posY + 10, 0, 1, 1, 31, 63 )
   elseif ( (not direcao) and ( not parado) and (not movimentando) and (not pulando) ) then
-    animGolpe:draw( imgGolpe, posX, posY + 10, 0, -1, 1, 31, 0 )
+    animGolpe:draw( imgGolpe, posX, posY + 10, 0, -1, 1, 31, 63 )
   end
 end
 --fim do controle de golpes
