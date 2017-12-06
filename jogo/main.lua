@@ -2,14 +2,8 @@ local anim = require 'anim8'
 local larguraTela = love.graphics.getWidth()
 --local alturaTela = love.graphics.getHeight()
 local initPosY = 570
-local chao = {
-  x= larguraTela,
-  y= 570
-}
-local plat1 = {
-  x= 200,
-  y= 480
-}
+local chao = { x= larguraTela, y= 570 }
+local plat1 = { x= 200, y= 480 }
 local imgMovimento, imgParado, imgPulo, imgGolpe, animParado, animMovimento, animGolpe
 
 local posX = 100 -- posição inicial do personagem no eixo X
@@ -30,7 +24,8 @@ end
 
 function love.update( dt )
   movimentacao(dt)
-  pulo(dt)
+  emPlataforma(dt)
+  cair(dt)
   golpear( dt )
 end
 
@@ -59,11 +54,10 @@ end
 
 --Controle de movimento
 function emPlataforma(dt)
-  if posY == plat1.y and posX <= plat1.x then
-
+  if posY == plat1.y and posX >= plat1.x then
+      velY = posY
   end
 end
-
 
 function loadMovimentacao()
   imgMovimento = love.graphics.newImage("imagens/movimento.png")
@@ -76,7 +70,10 @@ function loadMovimentacao()
 end
 
 function movimentacaoAr()
-  if posY ~= initPosY then
+  if posY == plat1.y and posX <= plat1.x then
+    movimentando = true
+    pulando = false
+  elseif posY ~= initPosY then
     movimentando = false
     pulando = true
   else
@@ -109,7 +106,7 @@ function parou( key )
   end
 end
 
-function pulo(dt) -- realiza os calculos para o pulo do personagem
+function cair(dt) -- realiza os calculos para o pulo do personagem
   if velY ~= 0 then
     posY = posY - velY * dt
     velY = velY - gravidade * dt
