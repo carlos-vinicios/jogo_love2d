@@ -3,19 +3,22 @@ local larguraTela = love.graphics.getWidth()
 --local alturaTela = love.graphics.getHeight()
 local initPosY = 570
 local chao = { x= larguraTela, y= 570 }
-local plat1 = { x= 200, y= 480 }
+local plat1 = { x= 0, y= 480, largura = 200 }
+local plat2 = { x= 270, y= 390, largura = 240 }
 local imgMovimento, imgParado, imgPulo, imgGolpe, animParado, animMovimento, animGolpe
-
-local posX = 100 -- posição inicial do personagem no eixo X
-local posY = initPosY -- posição inicial do personagem no eixo Y
-local direcao = true --define a direcao true = right / false = left
-local parado = true
-local movimentando = false
-local pulando = false
-local golpeando = false
 local gravidade = 600
-local alturaPulo = 350
 local velY = 0
+
+local personagem = {
+  posX = 100, -- posição inicial do personagem no eixo X
+  posY = initPosY, -- posição inicial do personagem no eixo Y
+  alturaPulo = 350, --define a altura do salto do boneco
+  direcao = true, --define a direcao true = right / false = left
+  parado = true, --define se o boneco esta parado
+  movimentando = false, --define se o boneco esta se movimentando
+  pulando = false, --define se o boneco esta pulando
+  golpeando = false --define se o boneco esta dando golpes
+}
 
 function love.load()
   loadMovimentacao()
@@ -24,7 +27,6 @@ end
 
 function love.update( dt )
   movimentacao(dt)
-  emPlataforma(dt)
   cair(dt)
   golpear( dt )
 end
@@ -48,17 +50,12 @@ end
 function renderizarChao()
   love.graphics.setColor(168, 168, 168)
   love.graphics.rectangle( "fill", 0, chao.y, chao.x, 80) --chão 63 a diferença do desenho da imagem, assim como, qualquer 63 abaixo
-  love.graphics.rectangle( "fill", 0, plat1.y, plat1.x, 30) --plataforma 1
+  love.graphics.rectangle( "fill", plat1.x, plat1.y, plat1.largura, 30) --plataforma 1
+  love.graphics.rectangle( "fill", plat2.x, plat2.y, plat2.largura, 30) --plataforma 2
 end
 --fim do controle do mundo
 
 --Controle de movimento
-function emPlataforma(dt)
-  if posY == plat1.y and posX >= plat1.x then
-      velY = posY
-  end
-end
-
 function loadMovimentacao()
   imgMovimento = love.graphics.newImage("imagens/movimento.png")
   imgParado = love.graphics.newImage("imagens/parado.png")
@@ -69,87 +66,108 @@ function loadMovimentacao()
   animMovimento = anim.newAnimation( movi( '1-8', 1), 0.09 )
 end
 
-function movimentacaoAr()
-  if posY == plat1.y and posX <= plat1.x then
-    movimentando = true
-    pulando = false
-  elseif posY ~= initPosY then
-    movimentando = false
-    pulando = true
-  else
-    movimentando = true
-  end
-end
-
 function movimentacao( dt )
   if love.keyboard.isDown('left') then --quando o botão da esquerda no teclado, for apertado
-    movimentacaoAr()
-    parado = false
-    posX = posX - 150 * dt
+    movimentacaoAr(plat1)
+    --movimentacaoAr(plat2)
+    personagem.parado = false
+    personagem.posX = personagem.posX - 150 * dt
     direcao = false
     animMovimento:update(dt)
   end
   if love.keyboard.isDown('right') then --quando o botão da direita no teclado, for apertado
-    movimentacaoAr()
-    parado = false
-    posX = posX + 150 * dt
+    movimentacaoAr(plat1)
+    --movimentacaoAr(plat2)
+    personagem.parado = false
+    personagem.posX = personagem.posX + 150 * dt
     direcao = true
     animMovimento:update(dt)
   end
   animParado:update(dt)
 end
 
-function parou( key )
-  if ( key == 'left' or key == 'right' or key == 'q' or key == 'up' ) then
-    parado = true
-    golpeando = false
+function cair(dt) -- realiza os calculos para o pulo do personagem
+  limitesPlataforma(plat1)
+  --limitesPlataforma(plat2)
+  if velY ~= 0 then
+    personagem.posY = personagem.posY - velY * dt
+    velY = velY - gravidade * dt
+    if personagem.posY > initPosY then --para parar no chão
+      velY = 0
+      personagem.posY = initPosY
+    end
+    terraFirme(plat1)
+    --terraFirme(plat2)
+  end
+  pararPulo(initPosY)
+  pararPulo(plat1.y)
+  --pararPulo(plat2.y)
+end
+
+function pararPulo(coordenaY)
+  if personagem.posY == coordenaY then
+    personagem.pulando = false
   end
 end
 
-function cair(dt) -- realiza os calculos para o pulo do personagem
-  if velY ~= 0 then
-    posY = posY - velY * dt
-    velY = velY - gravidade * dt
-    if posY > initPosY then --para parar no chão
-      velY = 0
-      posY = initPosY
-    end
-    if posY > plat1.y and posX < plat1.x then --para parar na plataforma 1
-      velY = 0
-      posY = plat1.y
-    end
-  end
-  if posY == initPosY or posY == plat1.y then
-    pulando = false
+function parou( key )
+  if ( key == 'left' or key == 'right' or key == 'q' or key == 'up' ) then
+    personagem.parado = true
+    personagem.golpeando = false
   end
 end
 
 function pular(key) --realiza a ação do pulo com keypressed
-  pulando = true
-  movimentando = false
+  personagem.pulando = true
+  personagem.movimentando = false
   if key == 'up' then
-    if velY == 0 and (not golpeando) then
-      velY = alturaPulo
+    if velY == 0 and (not personagem.golpeando) then
+      velY = personagem.alturaPulo
     end
+  end
+end
+
+function movimentacaoAr(plat)
+  if (personagem.posY == plat.y and (personagem.posX >= plat.x and personagem.posX <= plat.largura)) then
+    personagem.movimentando = true
+    personagem.pulando = false
+  elseif personagem.posY ~= initPosY then
+    personagem.movimentando = false
+    personagem.pulando = true
+  else
+    personagem.movimentando = true
+  end
+end
+
+function limitesPlataforma(plat)
+  if personagem.posY == plat.y and ( personagem.posX < plat.x or personagem.posX > plat.largura ) then
+      velY = initPosY - plat.y
+  end
+end
+
+function terraFirme(plat)
+  if personagem.posY >= plat.y and (personagem.posX >= plat.x and personagem.posX <= plat.largura) then --para parar em plataforma
+    velY = 0
+    personagem.posY = plat.y
   end
 end
 
 function renderizarMovimento()
   love.graphics.setColor(255, 255, 255) --define a cor devido a imagem ser transparente e o fundo vai interferir na cor do personagem
-  if ( movimentando and direcao and ( not parado ) ) then
-    animMovimento:draw( imgMovimento, posX, posY + 8, 0, 1, 1, 29, 63 )
-  elseif ( movimentando and (not direcao) and (not parado) ) then
-    animMovimento:draw( imgMovimento, posX, posY + 8, 0, -1, 1, 29, 63 )
+  if ( personagem.movimentando and direcao and ( not personagem.parado ) ) then
+    animMovimento:draw( imgMovimento, personagem.posX, personagem.posY + 8, 0, 1, 1, 29, 63 )
+  elseif ( personagem.movimentando and (not direcao) and (not personagem.parado) ) then
+    animMovimento:draw( imgMovimento, personagem.posX, personagem.posY + 8, 0, -1, 1, 29, 63 )
   end
-  if ( direcao and parado and (not pulando) ) then
-    animParado:draw( imgParado, posX, posY, 0, 1, 1, 20, 63 )
-  elseif ( not direcao and parado and not pulando ) then
-    animParado:draw( imgParado, posX, posY, 0, -1, 1, 20, 63 )
+  if ( direcao and personagem.parado and (not personagem.pulando) ) then
+    animParado:draw( imgParado, personagem.posX, personagem.posY, 0, 1, 1, 20, 63 )
+  elseif ( not direcao and personagem.parado and not personagem.pulando ) then
+    animParado:draw( imgParado, personagem.posX, personagem.posY, 0, -1, 1, 20, 63 )
   end
-  if( pulando and direcao and (not movimentando) ) then
-    love.graphics.draw( imgPulo, posX, posY, 0, 1, 1, 27, 63 )
-  elseif ( pulando and (not direcao) and (not movimentando) ) then
-    love.graphics.draw( imgPulo, posX, posY, 0, -1, 1, 27, 63 )
+  if( personagem.pulando and direcao and (not personagem.movimentando) ) then
+    love.graphics.draw( imgPulo, personagem.posX, personagem.posY, 0, 1, 1, 27, 63 )
+  elseif ( personagem.pulando and (not direcao) and (not personagem.movimentando) ) then
+    love.graphics.draw( imgPulo, personagem.posX, personagem.posY, 0, -1, 1, 27, 63 )
   end
 end
 --fim do controle de movimento
@@ -163,14 +181,14 @@ end
 
 function golpear( dt )
   if love.keyboard.isDown('q') then
-    golpeando = true
-    movimentando = false
-    parado = false
-    pulando = false
+    personagem.golpeando = true
+    personagem.movimentando = false
+    personagem.parado = false
+    personagem.pulando = false
     if direcao then --soco right
-      posX = posX + 20 * dt
+      personagem.posX = personagem.posX + 20 * dt
     else --soco left
-      posX = posX - 20 * dt
+      personagem.posX = personagem.posX - 20 * dt
     end
     animGolpe:update( dt )
   end
@@ -178,10 +196,10 @@ end
 
 function renderizarGolpes()
   love.graphics.setColor(255, 255, 255)
-  if ( direcao and ( not parado ) and (not movimentando) and (not pulando) ) then
-    animGolpe:draw( imgGolpe, posX, posY + 10, 0, 1, 1, 31, 63 )
-  elseif ( (not direcao) and ( not parado) and (not movimentando) and (not pulando) ) then
-    animGolpe:draw( imgGolpe, posX, posY + 10, 0, -1, 1, 31, 63 )
+  if ( direcao and ( not personagem.parado ) and (not personagem.movimentando) and (not personagem.pulando) ) then
+    animGolpe:draw( imgGolpe, personagem.posX, personagem.posY + 10, 0, 1, 1, 31, 63 )
+  elseif ( (not direcao) and ( not personagem.parado) and (not personagem.movimentando) and (not personagem.pulando) ) then
+    animGolpe:draw( imgGolpe, personagem.posX, personagem.posY + 10, 0, -1, 1, 31, 63 )
   end
 end
 --fim do controle de golpes
