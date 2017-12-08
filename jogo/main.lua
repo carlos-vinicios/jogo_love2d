@@ -5,6 +5,7 @@ local initPosY = 570
 local chao = { x= larguraTela, y= 570 }
 local plat1 = { x= 0, y= 480, largura = 200 }
 local plat2 = { x= 270, y= 390, largura = 240 }
+local plataformas = {plat1, plat2}
 local imgMovimento, imgParado, imgPulo, imgGolpe, animParado, animMovimento, animGolpe
 local gravidade = 600
 local velY = 0
@@ -29,6 +30,8 @@ function love.update( dt )
   movimentacao(dt)
   cair(dt)
   golpear( dt )
+  --print(personagem.posX, personagem.posY)
+  --print(personagem.pulando, personagem.movimentando, personagem.golpeando, personagem.parado)
 end
 
 function love.draw()
@@ -55,7 +58,7 @@ function renderizarChao()
 end
 --fim do controle do mundo
 
---Controle de movimento
+--Controle de movimentacao
 function loadMovimentacao()
   imgMovimento = love.graphics.newImage("imagens/movimento.png")
   imgParado = love.graphics.newImage("imagens/parado.png")
@@ -68,16 +71,14 @@ end
 
 function movimentacao( dt )
   if love.keyboard.isDown('left') then --quando o botão da esquerda no teclado, for apertado
-    movimentacaoAr(plat1)
-    --movimentacaoAr(plat2)
+    movimentacaoAr(plataformas)
     personagem.parado = false
     personagem.posX = personagem.posX - 150 * dt
     direcao = false
     animMovimento:update(dt)
   end
   if love.keyboard.isDown('right') then --quando o botão da direita no teclado, for apertado
-    movimentacaoAr(plat1)
-    --movimentacaoAr(plat2)
+    movimentacaoAr(plataformas)
     personagem.parado = false
     personagem.posX = personagem.posX + 150 * dt
     direcao = true
@@ -88,7 +89,7 @@ end
 
 function cair(dt) -- realiza os calculos para o pulo do personagem
   limitesPlataforma(plat1)
-  --limitesPlataforma(plat2)
+  limitesPlataforma(plat2)
   if velY ~= 0 then
     personagem.posY = personagem.posY - velY * dt
     velY = velY - gravidade * dt
@@ -96,23 +97,18 @@ function cair(dt) -- realiza os calculos para o pulo do personagem
       velY = 0
       personagem.posY = initPosY
     end
-    terraFirme(plat1)
-    --terraFirme(plat2)
+    tocarPlataforma(plat1)
+    tocarPlataforma(plat2)
   end
   pararPulo(initPosY)
   pararPulo(plat1.y)
-  --pararPulo(plat2.y)
+  pararPulo(plat2.y)
 end
 
-function pararPulo(coordenaY)
-  if personagem.posY == coordenaY then
-    personagem.pulando = false
-  end
-end
-
-function parou( key )
+function parou( key ) --quando as teclas de movimentação deixam de ser pressionadas ele volta a animação de parado
   if ( key == 'left' or key == 'right' or key == 'q' or key == 'up' ) then
     personagem.parado = true
+    personagem.movimentando = false
     personagem.golpeando = false
   end
 end
@@ -127,8 +123,14 @@ function pular(key) --realiza a ação do pulo com keypressed
   end
 end
 
-function movimentacaoAr(plat)
-  if (personagem.posY == plat.y and (personagem.posX >= plat.x and personagem.posX <= plat.largura)) then
+function pararPulo(coordenaY) --para o pulo ao encostar no chão ou em uma plataforma
+  if personagem.posY == coordenaY then
+    personagem.pulando = false
+  end
+end
+
+function movimentacaoAr(vetorPlat) --verifica a posição do personagem no eixo y e retorna se o mesmo esta se movimentando em uma plataforma ou no ar
+  if movimentarPlataforma(vetorPlat) then
     personagem.movimentando = true
     personagem.pulando = false
   elseif personagem.posY ~= initPosY then
@@ -139,20 +141,29 @@ function movimentacaoAr(plat)
   end
 end
 
-function limitesPlataforma(plat)
-  if personagem.posY == plat.y and ( personagem.posX < plat.x or personagem.posX > plat.largura ) then
+function movimentarPlataforma(plats) --define se o boneco esta se movimentando em uma dada plataforma, checando dentre
+  for i=1, #plats do                 --todas desenhadas na tela (recebe como parametro o vetor de todas as contidas na fase)
+    if (personagem.posY == plats[i].y and (personagem.posX >= plats[i].x and personagem.posX <= (plats[i].largura + plats[i].x))) then
+      return true
+    end
+  end
+  return false
+end
+
+function limitesPlataforma(plat) --checa se o boneco ultrapassou o limite de certa plataforma, fazendo com que cai (recebe como parametro uma plataforma)
+  if personagem.posY == plat.y and ( personagem.posX < plat.x or personagem.posX > (plat.largura + plat.x)) then
       velY = initPosY - plat.y
   end
 end
 
-function terraFirme(plat)
-  if personagem.posY >= plat.y and (personagem.posX >= plat.x and personagem.posX <= plat.largura) then --para parar em plataforma
+function tocarPlataforma(plat) --checa se o personagem esta sobre uma plataforma, fazendo com que pare sua queda vertical
+  if personagem.posY >= plat.y and (personagem.posX >= plat.x and personagem.posX <= (plat.largura + plat.x)) then --para parar em plataforma
     velY = 0
     personagem.posY = plat.y
   end
 end
 
-function renderizarMovimento()
+function renderizarMovimento() --renderiza todas as sprites de movimentação
   love.graphics.setColor(255, 255, 255) --define a cor devido a imagem ser transparente e o fundo vai interferir na cor do personagem
   if ( personagem.movimentando and direcao and ( not personagem.parado ) ) then
     animMovimento:draw( imgMovimento, personagem.posX, personagem.posY + 8, 0, 1, 1, 29, 63 )
@@ -170,7 +181,7 @@ function renderizarMovimento()
     love.graphics.draw( imgPulo, personagem.posX, personagem.posY, 0, -1, 1, 27, 63 )
   end
 end
---fim do controle de movimento
+--fim do controle de movimentacao
 
 --controle de golpes
 function loadGolpe()
