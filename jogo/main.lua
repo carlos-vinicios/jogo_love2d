@@ -3,9 +3,10 @@ local larguraTela = love.graphics.getWidth()
 --local alturaTela = love.graphics.getHeight()
 local initPosY = 570
 local chao = { x= larguraTela, y= 570 }
-local plat1 = { x= 0, y= 480, largura = 200 }
-local plat2 = { x= 270, y= 390, largura = 240 }
-local plataformas = {plat1, plat2}
+local plat1 = { x= 0, y= 480, largura = 200, espessura = 30 }
+local plat2 = { x= 270, y= 390, largura = 240, espessura = 30 }
+local plat3 = { x= 170, y= 290, largura = 210, espessura = 30}
+local plataformas = {plat1, plat2, plat3}
 local imgMovimento, imgParado, imgPulo, imgGolpe, animParado, animMovimento, animGolpe
 local gravidade = 600
 local velY = 0
@@ -30,12 +31,10 @@ function love.update( dt )
   movimentacao(dt)
   cair(dt)
   golpear( dt )
-  --print(personagem.posX, personagem.posY)
-  --print(personagem.pulando, personagem.movimentando, personagem.golpeando, personagem.parado)
 end
 
 function love.draw()
-  love.graphics.setBackgroundColor(75, 114, 254)
+  love.graphics.setBackgroundColor(75, 114, 254) -- cor azul do fundo
   renderizarMovimento()
   renderizarGolpes()
   renderizarChao()
@@ -51,10 +50,11 @@ end
 
 --Controle do mundo
 function renderizarChao()
-  love.graphics.setColor(168, 168, 168)
+  love.graphics.setColor(168, 168, 168) --cor de cinza do chão
   love.graphics.rectangle( "fill", 0, chao.y, chao.x, 80) --chão 63 a diferença do desenho da imagem, assim como, qualquer 63 abaixo
-  love.graphics.rectangle( "fill", plat1.x, plat1.y, plat1.largura, 30) --plataforma 1
-  love.graphics.rectangle( "fill", plat2.x, plat2.y, plat2.largura, 30) --plataforma 2
+  for i=1, #plataformas do
+    love.graphics.rectangle( "fill", plataformas[i].x, plataformas[i].y, plataformas[i].largura, plataformas[i].espessura) --plataforma
+  end
 end
 --fim do controle do mundo
 
@@ -88,8 +88,7 @@ function movimentacao( dt )
 end
 
 function cair(dt) -- realiza os calculos para o pulo do personagem
-  limitesPlataforma(plat1)
-  limitesPlataforma(plat2)
+  limitesPlataforma(plataformas)
   if velY ~= 0 then
     personagem.posY = personagem.posY - velY * dt
     velY = velY - gravidade * dt
@@ -97,12 +96,12 @@ function cair(dt) -- realiza os calculos para o pulo do personagem
       velY = 0
       personagem.posY = initPosY
     end
-    tocarPlataforma(plat1)
-    tocarPlataforma(plat2)
+    tocarPlataforma(plataformas)
   end
   pararPulo(initPosY)
-  pararPulo(plat1.y)
-  pararPulo(plat2.y)
+  for i=1, #plataformas do
+    pararPulo(plataformas[i].y)
+  end
 end
 
 function parou( key ) --quando as teclas de movimentação deixam de ser pressionadas ele volta a animação de parado
@@ -150,21 +149,26 @@ function movimentarPlataforma(plats) --define se o boneco esta se movimentando e
   return false
 end
 
-function limitesPlataforma(plat) --checa se o boneco ultrapassou o limite de certa plataforma, fazendo com que cai (recebe como parametro uma plataforma)
-  if personagem.posY == plat.y and ( personagem.posX < plat.x or personagem.posX > (plat.largura + plat.x)) then
-      velY = initPosY - plat.y
+function limitesPlataforma(plats) --checa se o boneco ultrapassou o limite de certa plataforma, fazendo com que cai (recebe como parametro uma plataforma)
+  for i=1,#plats do
+    if personagem.posY == plats[i].y and ( personagem.posX < plats[i].x or personagem.posX > (plats[i].largura + plats[i].x)) then
+        velY = 1 --para ativar a gravidade e fazer com que o boneco tenha uma queda vertical
+    end
   end
 end
 
-function tocarPlataforma(plat) --checa se o personagem esta sobre uma plataforma, fazendo com que pare sua queda vertical
-  if personagem.posY >= plat.y and (personagem.posX >= plat.x and personagem.posX <= (plat.largura + plat.x)) then --para parar em plataforma
-    velY = 0
-    personagem.posY = plat.y
+function tocarPlataforma(plats) --checa se o personagem esta sobre uma plataforma, fazendo com que pare sua queda vertical
+  for i=1, #plats do
+    --posição do y do personagem maior que a posição da plataforma no eixo y, e menor que sua posição mais espessura, fazendo com que calcule o espaço ocupado na tela
+    if (personagem.posY >= plats[i].y and personagem.posY <= plats[i].y + plats[i].espessura) and (personagem.posX >= plats[i].x and personagem.posX <= (plats[i].largura + plats[i].x)) then --para parar em plataforma
+      velY = 0
+      personagem.posY = plats[i].y
+    end
   end
 end
 
 function renderizarMovimento() --renderiza todas as sprites de movimentação
-  love.graphics.setColor(255, 255, 255) --define a cor devido a imagem ser transparente e o fundo vai interferir na cor do personagem
+  love.graphics.setColor(255, 255, 255) --define a cor (branco) devido a imagem ser transparente e o fundo vai interferir na cor do personagem
   if ( personagem.movimentando and direcao and ( not personagem.parado ) ) then
     animMovimento:draw( imgMovimento, personagem.posX, personagem.posY + 8, 0, 1, 1, 29, 63 )
   elseif ( personagem.movimentando and (not direcao) and (not personagem.parado) ) then
