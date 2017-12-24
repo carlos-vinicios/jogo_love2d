@@ -5,6 +5,7 @@ local imgMovimento, imgParado, imgPulo, imgGolpe, animParado, animMovimento, ani
 personagem = {
   posX = initPosX, -- posição inicial do personagem no eixo X
   posY = initPosY, -- posição inicial do personagem no eixo Y
+  danos = 0,
   alturaPulo = 350, --define a altura do salto do boneco
   direcao = true, --define a direcao true = right / false = left
   parado = true, --define se o boneco esta parado
@@ -132,3 +133,9 @@ function renderizarGolpes()
   end
 end
 --fim do controle de golpes
+
+--Controle de danos
+function golpeado()
+  personagem.danos = personagem.danos + 15
+end
+--fim do controle de danos

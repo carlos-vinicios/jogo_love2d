@@ -24,11 +24,12 @@ function cair(dt, personagem) -- realiza os calculos para o pulo do personagem
   for i=1, #estruturas do
     pararPulo(estruturas[i].y, personagem)
   end
-  if personagem.posY > 2500 then
+  if personagem.posY > 2500 then --trecho que realiza a retorno do personagem a plataforma central
     velY = 1
     personagem.posY = initPosY - 30
     personagem.posX = initPosX
-    personagem.pulando = false
+    personagem.pulando = true
+    personagem.danos = personagem.danos + 25
   end
 end
 

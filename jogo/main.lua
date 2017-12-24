@@ -13,6 +13,7 @@ function love.update( dt )
   movimentacao(dt)
   cair(dt, personagem)
   golpear( dt )
+  print(personagem.danos)
 end
 
 function love.draw()
