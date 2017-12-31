@@ -7,6 +7,8 @@ initPosY = 570
 initPosX = 100
 gravidade = 600
 velY = 0
+require "menuPrincipal"
+require "selecaoPersonagem"
 require "personagem"
 
 function love.load()
