@@ -1,3 +1,8 @@
+--[[
+
+--Criar um arquivo para gerir os personagens selecionados no menu, jogando-os dentro de um vetor e colocar estruturas de repetições em cada controle da classe de personagem
+]]
+
 initPosY = 570
 initPosX = 100
 gravidade = 600
@@ -11,13 +16,14 @@ end
 
 function love.update( dt )
   movimentacao(dt)
-  cair(dt, personagem)
+  cair(dt, personagem1)
   golpear( dt )
-  print(personagem.danos)
+  print(personagem1.danos)
 end
 
 function love.draw()
   love.graphics.setBackgroundColor(75, 114, 254) -- cor azul do fundo
+  renderizarInformacoes()
   renderizarMovimento()
   renderizarGolpes()
   renderizarEstruturas()
