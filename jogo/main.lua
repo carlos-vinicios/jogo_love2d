@@ -12,22 +12,26 @@ require "selecaoPersonagem"
 require "personagem"
 
 function love.load()
-  loadMovimentacao()
-  loadGolpe()
+  loadMovimentacao(personagens[1])
+  loadMovimentacao(personagens[2])
+  loadGolpe(personagens[1])
+  loadGolpe(personagens[2])
 end
 
 function love.update( dt )
-  movimentacao(dt)
-  cair(dt, personagem1)
+  movimentacao(dt, personagens[1], personagens[2])
+  cair(dt, personagens[1])
+  cair(dt, personagens[2])
   golpear( dt )
-  print(personagem1.danos)
 end
 
 function love.draw()
   love.graphics.setBackgroundColor(75, 114, 254) -- cor azul do fundo
-  renderizarInformacoes()
-  renderizarMovimento()
-  renderizarGolpes()
+  renderizarInformacoes(personagens[1], personagens[2])
+  renderizarMovimento(personagens[1])
+  renderizarMovimento(personagens[2])
+  renderizarGolpes(personagens[1])
+  renderizarGolpes(personagens[2])
   renderizarEstruturas()
 end
 
