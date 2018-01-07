@@ -5,7 +5,7 @@ function love.conf (t) --arquivo para gerenciar as configurações do game
   t.console = true
 
   --controle de janela
-  t.window.title = "PFF - Panelinha Full Fight"
+  t.window.title = "TUR - The Ultimate Rinha"
   t.window.icon = nil
   t.window.width = 650
   t.window.height = 650

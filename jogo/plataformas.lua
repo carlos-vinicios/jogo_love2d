@@ -15,19 +15,19 @@ end
 
 function cair(dt, personagem) -- realiza os calculos para o pulo do personagem
   limitesPlataforma(estruturas, personagem)
-  if velY ~= 0 then
-    personagem.posY = personagem.posY - velY * dt
-    velY = velY - gravidade * dt
+  if personagem.velY ~= 0 then
+    personagem.posY = personagem.posY - personagem.velY * dt
+    personagem.velY = personagem.velY - gravidade * dt
     tocarPlataforma(estruturas, personagem)
   end
-  pararPulo(initPosY, personagem)
+  pararPulo(personagem.initPosY, personagem)
   for i=1, #estruturas do
     pararPulo(estruturas[i].y, personagem)
   end
   if personagem.posY > 2500 then --trecho que realiza a retorno do personagem a plataforma central
-    velY = 1
-    personagem.posY = initPosY - 30
-    personagem.posX = initPosX
+    personagem.velY = 1
+    personagem.posY = personagem.initPosY - 30
+    personagem.posX = personagem.initPosX
     personagem.pulando = true
     personagem.danos = personagem.danos + 25
   end
@@ -42,7 +42,7 @@ end
 function limitesPlataforma(plats, personagem) --checa se o boneco ultrapassou o limite de certa plataforma, fazendo com que cai (recebe como parametro uma plataforma)
   for i=1,#plats do
     if personagem.posY == plats[i].y and ( personagem.posX < plats[i].x or personagem.posX > (plats[i].largura + plats[i].x)) then
-        velY = 1 --para ativar a gravidade e fazer com que o boneco tenha uma queda vertical
+        personagem.velY = 1 --para ativar a gravidade e fazer com que o boneco tenha uma queda vertical
     end
   end
 end
@@ -51,7 +51,7 @@ function tocarPlataforma(plats, personagem) --checa se o personagem esta sobre u
   for i=1, #plats do
     --posição do y do personagem maior que a posição da plataforma no eixo y, e menor que sua posição mais espessura, fazendo com que calcule o espaço ocupado na tela
     if (personagem.posY >= plats[i].y and personagem.posY <= plats[i].y + plats[i].espessura) and (personagem.posX >= plats[i].x and personagem.posX <= (plats[i].largura + plats[i].x)) then --para parar em plataforma
-      velY = 0
+      personagem.velY = 0
       personagem.posY = plats[i].y
     end
   end
