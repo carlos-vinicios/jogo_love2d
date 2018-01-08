@@ -30,6 +30,7 @@ function cair(dt, personagem) -- realiza os calculos para o pulo do personagem
     personagem.posX = personagem.initPosX
     personagem.pulando = true
     personagem.danos = personagem.danos + 25
+    personagem.empurrado = false
   end
 end
 

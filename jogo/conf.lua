@@ -7,7 +7,7 @@ function love.conf (t) --arquivo para gerenciar as configurações do game
   --controle de janela
   t.window.title = "TUR - The Ultimate Rinha"
   t.window.icon = nil
-  t.window.width = 650
+  t.window.width = 649
   t.window.height = 650
   t.window.borderless = false
   t.window.resizable = true

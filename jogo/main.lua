@@ -2,20 +2,27 @@ gravidade = 600
 menuView = true
 gameStart= false
 charSelect = false
+p1 = nil
+p2 = nil
 fontePrincipal = love.graphics.newFont("fontes/bubble & soap.ttf", 20)
 fonteInLuta = love.graphics.newFont("fontes/Double_Bubble_shadow.otf", 35)
 
+require "cenarios"
 require "personagem"
 require "menuPrincipal"
 require "selecaoPersonagem"
 
 function love.load()
+  loadCenario()
+  loadBackground()
   for i=1, #personagens do
     loadMovimentacao(personagens[i])
   end
-  if gameStart then
-    loadGolpe(personagens[1])
-    loadGolpe(personagens[2])
+  for i=1, #personagens do
+    loadGolpe(personagens[i])
+  end
+  for i=1, #personagens do
+    loadDamages(personagens[i])
   end
 end
 
@@ -24,55 +31,68 @@ function love.update( dt )
     animacaoSelecionados(dt)
   end
   if gameStart then
-    movimentacao(dt, personagens[1], personagens[2])
-    cair(dt, personagens[1])
-    cair(dt, personagens[2])
-    socar( dt, personagens[1], personagens[2] )
+    setPosicao1(personagens[p1])
+    setPosicao2(personagens[p2])
+    movimentacao(dt, personagens[p1], personagens[p2])
+    cair(dt, personagens[p1])
+    cair(dt, personagens[p2])
+    socar( dt, personagens[p1], personagens[p2] )
+    empurrar( dt, personagens[p1], personagens[p2] )
+    damageControl(dt, personagens[p1], personagens[p2] )
   end
 end
 
 function love.draw()
   if menuView then
-    renderizarButoes()
+    renderizarBackgroundMenu()
     renderizarTextos()
   end
   if charSelect then
-    renderizartextTitle()
-    renderizarpersonagensDisponiveis()
-    renderizartextP1()
-    renderizartextP2()
+    love.graphics.setBackgroundColor(168, 168, 168) --cor de cinza
+    renderizarTextTitle()
+    renderizarPersonagensDisponiveis()
+    renderizarTextP1()
+    renderizarTextP2()
     if p1Selecionado then
-      renderizarp1Selected(indexP1)
+      renderizarP1Selected(indexP1)
     end
     if p2Selecionado then
-      renderizarp2Selected(indexP2)
+      renderizarP2Selected(indexP2)
     end
-    renderizarvoltar()
+    renderizarVoltar()
+    renderizarStart()
   end
   if gameStart then
-    love.graphics.setBackgroundColor(75, 114, 254) -- cor azul do fundo
-    renderizarInformacoes(personagens[1], personagens[2])
-    renderizarMovimento(personagens[1])
-    renderizarMovimento(personagens[2])
-    renderizarGolpes(personagens[1])
-    renderizarGolpes(personagens[2])
+    renderizarBackground()
+    renderizarInformacoes(personagens[p1], personagens[p2])
+    renderizarMovimento(personagens[p1])
+    renderizarMovimento(personagens[p2])
+    renderizarGolpes(personagens[p1])
+    renderizarGolpes(personagens[p2])
     renderizarEstruturas()
+    renderizarDamage(personagens[p1])
+    renderizarDamage(personagens[p2])
   end
 end
 
 function love.keyreleased( key ) --saber quando uma dada tecla deixou de ser apertada no teclado
-  parou( key, personagens[1], personagens[2] )
+  parou( key, personagens[p1], personagens[p2] )
 end
 
 function love.keypressed(key) --saber quando uma dada teclada foi pressionada
-  pular( key, personagens[1], personagens[2] )
+  pular( key, personagens[p1], personagens[p2] )
 end
 
 function love.mousepressed(x, y, button) --saber qual parte da tela do jogo foi clicada pelo mouse
-  play(x, y, button)
-  exit(x, y, button)
-  clickP1(x, y, button)
-  clickVoltar(x, y, button)
+  if menuView then
+    play(x, y, button)
+    exit(x, y, button)
+  end
+  if charSelect then
+    clickP1(x, y, button)
+    clickVoltar(x, y, button)
+    clickStart(x, y, button)
+  end
   if button == 1 then
     print(x)
     print(y)
