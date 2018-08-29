@@ -349,7 +349,9 @@ function condicaoAcerto(personagem1, personagem2)
 end
 
 function golpeado(personagem)
-  personagem.danos = personagem.danos + 0.009
+  if personagem.danos < 100 then
+    personagem.danos = personagem.danos + 100
+  end
   personagem.apanhando = true
   personagem.pulando = false
   personagem.movimentando = false
@@ -416,3 +418,28 @@ function renderizarDamage(personagem)
   end
 end
 --fim do controle de danos
+
+--controle de fim do jogo
+function gameOverView(personagem1, personagem2)
+  if personagem1.danos >= 100 and personagem1.danos > personagem2.danos then
+    popUpGameOver()
+  end
+  if personagem2.danos >= 100 and personagem2.danos > personagem1.danos then
+    popUpGameOver()
+  end
+end
+
+function popUpGameOver()
+  love.graphics.setColor(0, 0, 0)
+  love.graphics.print("Game Over", 170, 170)
+end
+
+function backMainMenu(key)
+  if key == 'm' then
+    gameover = false
+    gameStart = false
+    charSelect = false
+    menuView = true
+  end
+end
+--fim do controle de fim do jogo
